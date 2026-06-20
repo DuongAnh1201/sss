@@ -62,5 +62,9 @@ class Settings():
     file_path: str = os.getenv("FILE_PATH")
     """Path to the knowledge base."""
 
+    redis_url: str = os.getenv("REDIS_URL", "")
+    """Optional Redis connection URL (e.g. redis://localhost:6379).
+    When set, the consent ledger uses Redis Streams; otherwise FileLedger (JSONL)."""
+
 # Singleton — import this everywhere instead of instantiating Settings() yourself.
 settings = Settings()

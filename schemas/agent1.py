@@ -7,6 +7,20 @@ class EmailAgentResult(BaseModel):
     message: str
 
 
+class EmailDraft(BaseModel):
+    """A pending email awaiting the user's approval (the consent-gate primitive).
+
+    When ``OrchestratorDeps.request_email_approval`` is set, the email agent builds
+    one of these and hands it to that callback instead of sending directly.
+    """
+
+    email_type: Literal["notification", "user_request"]
+    to: str
+    subject: str
+    body: str
+    link: str = ""
+
+
 
 class NotificationEmailRequest(BaseModel):
     recipient: str

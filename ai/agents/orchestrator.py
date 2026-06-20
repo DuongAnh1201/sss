@@ -1,16 +1,8 @@
-from typing import Literal
-
-from pydantic import BaseModel
 from pydantic_ai import Agent
 
 from ai.prompts import load_prompt
 from ai.agents.deps import OrchestratorDeps
-
-
-class OrchestratorResult(BaseModel):
-    intent: Literal["email", "calendar", "search", "communication", "knowledge", "unknown"]
-    response: str
-    """Human-readable reply shown to the user."""
+from schemas.orchestrator import OrchestratorResult
 
 _orchestrator: Agent | None = None
 
