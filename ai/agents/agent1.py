@@ -3,7 +3,7 @@ import asyncio
 from pydantic_ai import Agent, RunContext
 from ai.agents.deps import OrchestratorDeps
 from ai.prompts import load_prompt
-from schemas.agent1 import EmailAgentResult
+from schemas.agent1 import EmailAgentResult, EmailDraft
 
 _email_agent: Agent | None = None
 
@@ -32,7 +32,6 @@ def get_email_agent() -> Agent:
         ) -> str:
             """Send a plain email to any recipient on behalf of the user."""
             if ctx.deps.request_email_approval is not None:
-                from tools.email_approval import EmailDraft
                 draft = EmailDraft(email_type="user_request", to=to, subject=subject, body=body)
                 return await ctx.deps.request_email_approval(draft)
 
@@ -61,7 +60,6 @@ def get_email_agent() -> Agent:
         ) -> str:
             """Send a styled HTML notification email (system alerts, reminders, status updates)."""
             if ctx.deps.request_email_approval is not None:
-                from tools.email_approval import EmailDraft
                 draft = EmailDraft(email_type="notification", to=recipient, subject=subject, body=details, link=link)
                 return await ctx.deps.request_email_approval(draft)
 
