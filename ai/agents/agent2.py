@@ -1,6 +1,9 @@
 """Calendar sub-agent."""
 import asyncio
+
 from pydantic_ai import Agent, RunContext
+
+from ai.agents.consent import gate
 from ai.agents.deps import OrchestratorDeps
 from schemas.agent2 import CalendarResult, CalendarRequest
 from ai.prompts import load_prompt
@@ -30,51 +33,6 @@ def get_calendar_agent() -> Agent:
                 return f"Failed to list calendars. Reason: {e}"
 
         @_calendar_agent.tool
-        async def create_calendar_event(
-            ctx: RunContext[OrchestratorDeps],
-            req: CalendarRequest,
-        ) -> str:
-            """Create a calendar event on macOS. Falls back to tomnguyen6766@gmail.com if no calendar name given."""
-            from tools.calendar import create_calendar_event as _create
-            try:
-                output = await asyncio.to_thread(_create, req)
-                return output or f"Successfully scheduled '{req.title}' at {req.start}."
-            except RuntimeError as e:
-                return f"Failed to create event. Do not retry. Reason: {e}"
-
-        @_calendar_agent.tool
-        async def update_calendar_event(
-            ctx: RunContext[OrchestratorDeps],
-            req: CalendarRequest,
-        ) -> str:
-            """Update an existing calendar event by its ID. Use list_calendars to find the calendar name."""
-            from tools.calendar import create_calendar_update as _update
-            if not req.id:
-                ids = ctx.deps.calendar_event_ids
-                return f"No event ID provided. Known events: {ids or 'none saved yet'}. Do not retry."
-            try:
-                output = await asyncio.to_thread(_update, req)
-                return output or f"Event '{req.id}' updated."
-            except RuntimeError as e:
-                return f"Failed to update event. Do not retry. Reason: {e}"
-
-        @_calendar_agent.tool
-        async def delete_calendar_event(
-            ctx: RunContext[OrchestratorDeps],
-            req: CalendarRequest,
-        ) -> str:
-            """Delete a calendar event by its ID."""
-            from tools.calendar import create_calendar_delete as _delete
-            if not req.id:
-                ids = ctx.deps.calendar_event_ids
-                return f"No event ID provided. Known events: {ids or 'none saved yet'}. Do not retry."
-            try:
-                output = await asyncio.to_thread(_delete, req)
-                return output or f"Event '{req.id}' deleted."
-            except RuntimeError as e:
-                return f"Failed to delete event. Do not retry. Reason: {e}"
-
-        @_calendar_agent.tool
         async def check_freebusy(
             ctx: RunContext[OrchestratorDeps],
             req: CalendarRequest,
@@ -87,5 +45,76 @@ def get_calendar_agent() -> Agent:
                 return await asyncio.to_thread(_freebusy, req)
             except RuntimeError as e:
                 return f"Failed to check free/busy. Do not retry. Reason: {e}"
+
+        @_calendar_agent.tool
+        async def create_calendar_event(
+            ctx: RunContext[OrchestratorDeps],
+            req: CalendarRequest,
+        ) -> str:
+            """Create a calendar event on macOS."""
+            from tools.calendar import create_calendar_event as _create
+
+            async def _execute() -> str:
+                output = await asyncio.to_thread(_create, req)
+                return output or f"Successfully scheduled '{req.title}' at {req.start}."
+
+            return await gate(
+                ctx,
+                action_type="calendar.create",
+                agent="calendar_agent",
+                summary=f"Create calendar event '{req.title}' at {req.start}",
+                payload=req.model_dump(mode="json"),
+                execute=_execute,
+            )
+
+        @_calendar_agent.tool
+        async def update_calendar_event(
+            ctx: RunContext[OrchestratorDeps],
+            req: CalendarRequest,
+        ) -> str:
+            """Update an existing calendar event by its ID."""
+            if not req.id:
+                ids = ctx.deps.calendar_event_ids
+                return f"No event ID provided. Known events: {ids or 'none saved yet'}. Do not retry."
+
+            from tools.calendar import create_calendar_update as _update
+
+            async def _execute() -> str:
+                output = await asyncio.to_thread(_update, req)
+                return output or f"Event '{req.id}' updated."
+
+            return await gate(
+                ctx,
+                action_type="calendar.update",
+                agent="calendar_agent",
+                summary=f"Update calendar event '{req.id}' — new title: '{req.title}'",
+                payload=req.model_dump(mode="json"),
+                execute=_execute,
+            )
+
+        @_calendar_agent.tool
+        async def delete_calendar_event(
+            ctx: RunContext[OrchestratorDeps],
+            req: CalendarRequest,
+        ) -> str:
+            """Delete a calendar event by its ID."""
+            if not req.id:
+                ids = ctx.deps.calendar_event_ids
+                return f"No event ID provided. Known events: {ids or 'none saved yet'}. Do not retry."
+
+            from tools.calendar import create_calendar_delete as _delete
+
+            async def _execute() -> str:
+                output = await asyncio.to_thread(_delete, req)
+                return output or f"Event '{req.id}' deleted."
+
+            return await gate(
+                ctx,
+                action_type="calendar.delete",
+                agent="calendar_agent",
+                summary=f"Delete calendar event '{req.id}' ('{req.title}')",
+                payload=req.model_dump(mode="json"),
+                execute=_execute,
+            )
 
     return _calendar_agent

@@ -1,0 +1,68 @@
+"""Consent-gate schemas.
+
+Every gated action flows through these three models:
+  ActionRequest  → raised by a tool, presented to the user
+  ActionDecision → the user's approve / cancel / revise response
+  LedgerEntry    → the durable record: request + decision + outcome
+"""
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import Any, Literal
+from uuid import uuid4
+
+from pydantic import BaseModel, Field
+
+ActionType = Literal[
+    "email.send",
+    "email.notification",
+    "email.register_domain",
+    "calendar.create",
+    "calendar.update",
+    "calendar.delete",
+    "comms.imessage",
+    "comms.call",
+    "knowledge.create",
+    "knowledge.update",
+    "knowledge.add_context",
+]
+
+Decision = Literal["approve", "cancel", "revise"]
+Outcome = Literal["executed", "failed", "cancelled", "pending"]
+
+
+class ActionRequest(BaseModel):
+    """A consequential action awaiting the user's decision."""
+
+    action_id: str = Field(default_factory=lambda: uuid4().hex)
+    action_type: ActionType
+    agent: str
+    summary: str
+    """One-line, voice-friendly description shown to the user."""
+    payload: dict[str, Any]
+    """The concrete args needed to execute — stored verbatim in the ledger."""
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+
+class ActionDecision(BaseModel):
+    """The user's response to an ActionRequest."""
+
+    action_id: str
+    decision: Decision
+    revision_note: str = ""
+    """Populated when decision == 'revise'; guidance for the agent to re-draft."""
+    decided_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+
+class LedgerEntry(BaseModel):
+    """One fully-resolved row in the consent ledger."""
+
+    request: ActionRequest
+    decision: ActionDecision | None = None
+    outcome: Outcome = "pending"
+    result_message: str = ""
+    resolved_at: datetime | None = None

@@ -1,17 +1,18 @@
-"""Text-mode harness for the Desir orchestrator (Phase 0).
+"""Text-mode harness for the Desir orchestrator.
 
-Two uses:
+Usage:
 
     uv run python run_text.py --check
-        Build every agent and import every tool without any network calls.
-        Verifies the skeleton is wired correctly. Exits non-zero on failure.
+        Import everything and build all agents. No network calls.
+        Verifies the full wiring is correct. Exits non-zero on failure.
 
     uv run python run_text.py "Email Priya that the deck is ready"
-        Run the orchestrator against a typed request (needs LLM credentials in
-        .env). Real-world actions are simulated unless DESIR_DEMO=0.
+        Run the orchestrator against a typed request. The consent gate
+        will prompt you on the console before any action fires.
 
-Voice (Phase 3) replaces stdin/stdout with speech; the orchestrator core is the
-same path exercised here.
+    uv run python run_text.py --yes "Email Priya that the deck is ready"
+        Same, but auto-approves all gated actions (still writes to the ledger).
+        Useful for CI / non-interactive smoke runs.
 """
 from __future__ import annotations
 
@@ -29,9 +30,10 @@ def build_check() -> None:
     from ai.agents.agent4 import get_communication_agent
     from ai.agents.agent5 import get_knowledge_base_agent
     import tools.sending_email  # noqa: F401
-    import tools.calendar  # noqa: F401
+    import tools.calendar       # noqa: F401
     import tools.communication  # noqa: F401
-    import tools.knowledge_base  # noqa: F401
+    import tools.knowledge_base # noqa: F401
+    import tools.ledger         # noqa: F401
 
     for name in (
         "orchestrator",
@@ -57,21 +59,96 @@ def build_check() -> None:
         print(f"  - {label}: {agent.name}")
 
 
-async def run_once(prompt: str) -> None:
+# ── Console approver ───────────────────────────────────────────────────────────
+
+async def _console_approver(req) -> object:
+    """Present an ActionRequest to the user on stdout and read their decision."""
+    from schemas.consent import ActionDecision
+
+    print()
+    print("─" * 60)
+    print(f"  ACTION REQUIRED  ({req.action_type})")
+    print(f"  {req.summary}")
+    print("─" * 60)
+    print("  approve / cancel / revise <note>")
+    print()
+
+    while True:
+        try:
+            raw = await asyncio.to_thread(input, "  Your decision: ")
+        except EOFError:
+            raw = "cancel"
+
+        raw = raw.strip()
+        lower = raw.lower()
+
+        if lower in ("approve", "yes", "y", "ok", "send it"):
+            print()
+            return ActionDecision(action_id=req.action_id, decision="approve")
+
+        if lower in ("cancel", "no", "n", "cancel it"):
+            print()
+            return ActionDecision(action_id=req.action_id, decision="cancel")
+
+        if lower.startswith("revise"):
+            note = raw[6:].strip(" :")
+            print()
+            return ActionDecision(
+                action_id=req.action_id, decision="revise", revision_note=note
+            )
+
+        print("  Please type: approve / cancel / revise <note>")
+
+
+async def _print_ledger_tail(ledger, limit: int = 5) -> None:
+    """Print the most recent ledger entries after a run."""
+    entries = await ledger.history(limit=limit)
+    if not entries:
+        return
+    print()
+    print("── Consent ledger (last %d) ──────────────────────────" % len(entries))
+    for e in entries:
+        dec = e.decision.decision if e.decision else "pending"
+        print(f"  [{e.outcome:10s}] [{dec:8s}] {e.request.summary[:55]}")
+    print()
+
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+
+async def run_once(prompt: str, auto_approve: bool = False) -> None:
     from ai.agents.orchestrator import get_orchestrator
     from ai.agents.deps import OrchestratorDeps
+    from tools.ledger import get_ledger
 
-    deps = OrchestratorDeps()
+    ledger = get_ledger()
+    deps = OrchestratorDeps(
+        ledger=ledger,
+        auto_approve=auto_approve,
+        request_approval=None if auto_approve else _console_approver,
+    )
+
     result = await get_orchestrator().run(prompt, deps=deps)
     print(result.output)
+    await _print_ledger_tail(ledger)
 
 
 def main() -> None:
     args = sys.argv[1:]
+
     if not args or args[0] == "--check":
         build_check()
         return
-    asyncio.run(run_once(" ".join(args)))
+
+    auto_approve = False
+    if args[0] == "--yes":
+        auto_approve = True
+        args = args[1:]
+
+    if not args:
+        print("Usage: run_text.py [--yes] <prompt>")
+        sys.exit(1)
+
+    asyncio.run(run_once(" ".join(args), auto_approve=auto_approve))
 
 
 if __name__ == "__main__":
