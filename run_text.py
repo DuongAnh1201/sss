@@ -179,7 +179,7 @@ async def run_once(
     )
 
     result = await get_orchestrator().run(prompt, deps=deps)
-    print(result.output)
+    print(result.output.response)
     await _print_ledger_tail(ledger)
 
 
