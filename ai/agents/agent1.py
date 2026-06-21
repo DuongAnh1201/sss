@@ -213,7 +213,7 @@ def get_email_agent() -> Agent:
                     f"<p style='color:#333;line-height:1.5'>{details}</p>"
                     f"{link_html}"
                     "<hr style='border:none;border-top:1px solid #eee'>"
-                    "<p style='color:#888;font-size:12px'>Sent by Désir</p>"
+                    "<p style='color:#888;font-size:12px'>Sent by MoneyPenny</p>"
                     "</div>"
                 )
                 result = await asyncio.to_thread(

@@ -43,7 +43,7 @@ def test_websocket_session_start_greeting(ws_client):
         greeting = _collect_until(ws, "transcript")
 
         assert greeting["role"] == "assistant"
-        assert "Désir" in greeting["text"]
+        assert "MoneyPenny" in greeting["text"]
 
 
 def test_websocket_guest_session_start(ws_client):

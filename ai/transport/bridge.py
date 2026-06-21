@@ -3,7 +3,7 @@
 FastAPI side  : enqueue_agent_request() → await_agent_response()
 uAgent side   : pop_outbound_request()  → post_agent_response()
 
-All keys use the prefix  desir:agent:  to avoid collisions.
+All keys use the prefix  moneypenny:agent:  to avoid collisions.
 """
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-OUTBOUND_KEY = "desir:agent:outbound"
-RESPONSE_PREFIX = "desir:agent:response:"
+OUTBOUND_KEY = "moneypenny:agent:outbound"
+RESPONSE_PREFIX = "moneypenny:agent:response:"
 RESPONSE_TTL = 120  # seconds before an uncollected response is evicted
 
 

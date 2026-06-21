@@ -10,7 +10,7 @@ Prerequisites
 
 2. Set env vars (all required):
        RUN_GOOGLE_INTEGRATION=1
-       DESIR_DEMO=0
+       MONEYPENNY_DEMO=0
 
 3. Run:
        uv run pytest tests/integration/test_google_workspace.py -v -s
@@ -101,7 +101,7 @@ def _require_creds(surface: str, scope_keyword: str):
 
     from tools import DEMO_MODE
     if DEMO_MODE:
-        pytest.skip(f"DESIR_DEMO=0 required for live {surface} tests")
+        pytest.skip(f"MONEYPENNY_DEMO=0 required for live {surface} tests")
 
     creds = _load_or_inject_token()
     if creds is None:

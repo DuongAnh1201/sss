@@ -3,18 +3,18 @@
 This is skipped by default. It only runs when ALL of these are true:
 
   1. ``RUN_GOOGLE_INTEGRATION=1`` is set (explicit opt-in),
-  2. demo mode is OFF (``DESIR_DEMO=0``), and
+  2. demo mode is OFF (``MONEYPENNY_DEMO=0``), and
   3. you've connected Workspace with a Drive scope (token on disk).
 
 How to run it (PowerShell):
 
     # one-time: enable the Drive API + set OAuth client, then connect with a Drive scope
     $env:GOOGLE_CLIENT_ID="..."; $env:GOOGLE_CLIENT_SECRET="..."
-    $env:DESIR_DEMO="0"
+    $env:MONEYPENNY_DEMO="0"
     uv run python run_text.py --connect      # choose Drive: "file" (least privilege) is enough
 
     # then run the live round-trip
-    $env:RUN_GOOGLE_INTEGRATION="1"; $env:DESIR_DEMO="0"
+    $env:RUN_GOOGLE_INTEGRATION="1"; $env:MONEYPENNY_DEMO="0"
     uv run pytest tests/workspace/test_google_drive_integration.py -v -s
 
 What it does (and cleans up after itself):

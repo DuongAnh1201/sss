@@ -6,11 +6,11 @@ when ``GOOGLE_TEST_INVITE_EMAIL`` is set (it sends a real calendar invitation).
 
 Gating (all must hold, else skipped):
   1. ``RUN_GOOGLE_INTEGRATION=1``,
-  2. ``DESIR_DEMO=0``,
+  2. ``MONEYPENNY_DEMO=0``,
   3. a connected token with a Calendar scope (``calendar.events``).
 
 Run (PowerShell):
-    $env:DESIR_DEMO="0"; $env:RUN_GOOGLE_INTEGRATION="1"
+    $env:MONEYPENNY_DEMO="0"; $env:RUN_GOOGLE_INTEGRATION="1"
     uv run pytest tests/workspace/test_google_calendar_integration.py -v -s
 
     # to also test inviting someone (sends a real invite):
