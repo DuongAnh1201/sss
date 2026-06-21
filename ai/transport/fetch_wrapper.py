@@ -152,10 +152,11 @@ async def handle_chat_message(ctx: Context, sender: str, msg: ChatMessage) -> No
     logger.info("[fetch/chat] ← %s: %s", sender[:20], query[:100])
 
     # ACK immediately so the AI Engine knows the message was received.
-    await ctx.send(sender, ChatAcknowledgement(
+    ack_status = await ctx.send(sender, ChatAcknowledgement(
         timestamp=datetime.now(timezone.utc),
         acknowledged_msg_id=msg.msg_id,
     ))
+    logger.info("[fetch/chat] ACK status → %s: %s", sender[:20], ack_status)
 
     try:
         response_text, intent = await _run_orchestrator(query, user_id=sender)
@@ -164,10 +165,11 @@ async def handle_chat_message(ctx: Context, sender: str, msg: ChatMessage) -> No
         response_text = f"Sorry, I ran into an error: {exc}"
         intent = "unknown"
 
-    await ctx.send(sender, ChatMessage(
+    reply_status = await ctx.send(sender, ChatMessage(
         content=[TextContent(type="text", text=response_text)],
     ))
-    logger.info("[fetch/chat] → %s (%s): %s", sender[:20], intent, response_text[:80])
+    logger.info("[fetch/chat] → %s (%s) status=%s: %s",
+                sender[:20], intent, reply_status, response_text[:80])
 
 
 @chat_protocol.on_message(model=ChatAcknowledgement)
@@ -259,8 +261,11 @@ def _build_agent() -> Agent:
                     register_chat_agent,
                     RegistrationRequestCredentials,
                 )
-                # Use the public endpoint if available, otherwise the mailbox URL.
-                endpoint = settings.fetch_agent_endpoint or f"https://agentverse.ai/v1/agents/{addr}/messages"
+                # The agent runs in mailbox mode — messages must be routed
+                # through the Agentverse mailbox, not sent directly to a
+                # custom endpoint.  Using a direct URL (e.g. Railway) here
+                # caused ASI:One to bypass the mailbox and fail delivery.
+                endpoint = "https://agentverse.ai/v2/agents/mailbox/submit"
                 await _asyncio.to_thread(
                     register_chat_agent,
                     "MoneyPenny",
@@ -274,6 +279,7 @@ def _build_agent() -> Agent:
                     "AI personal assistant — email, search, Drive, Gmail, and Agentverse agent messaging.",
                 )
                 print("  [agentverse] Chat agent registered — discoverable on ASI:One")
+                print(f"  [agentverse] Mailbox endpoint: {endpoint}")
             except Exception as exc:
                 print(f"  [agentverse] Chat registration failed: {exc}")
 

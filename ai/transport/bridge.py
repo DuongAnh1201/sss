@@ -23,8 +23,9 @@ def _redis():
     return aioredis.from_url(
         settings.redis_url,
         decode_responses=True,
-        socket_connect_timeout=5,
-        socket_timeout=5,
+        socket_connect_timeout=10,
+        socket_timeout=35,      # must exceed max blpop timeout (30 s) to avoid race
+        retry_on_timeout=True,
     )
 
 
