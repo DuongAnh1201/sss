@@ -19,7 +19,7 @@ def get_orchestrator() -> Agent:
             system_prompt=load_prompt("orchestrator"),
             output_type=OrchestratorResult,
             deps_type=OrchestratorDeps,
-            instrument=get_agent_instrumentation(),
+            capabilities=get_agent_instrumentation(),
         )
 
         # ── Dynamic context: inject user identity + bio at runtime ───────────────
@@ -33,6 +33,12 @@ def get_orchestrator() -> Agent:
                 parts.append(f"User's email: {ctx.deps.email_address}.")
             if ctx.deps.user_history_context:
                 parts.append(f"## User Background\n{ctx.deps.user_history_context}")
+            turns = (ctx.deps.history_context or {}).get("turns", [])
+            if turns:
+                history_lines = "\n".join(
+                    f"User: {t['user']}\nAssistant: {t['assistant']}" for t in turns[-10:]
+                )
+                parts.append(f"## Conversation so far\n{history_lines}")
             return "\n".join(parts)
 
         # ── Sub-agent delegation tools ─────────────────────────────────────────
