@@ -16,6 +16,7 @@ def get_email_agent() -> Agent:
     global _email_agent
     if _email_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _email_agent = Agent(
             model=settings.ai_model,
@@ -23,6 +24,7 @@ def get_email_agent() -> Agent:
             system_prompt=_SYSTEM_PROMPT,
             output_type=EmailAgentResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         @_email_agent.tool

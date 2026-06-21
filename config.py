@@ -24,8 +24,6 @@ class Settings:
         extra="ignore",  # silently ignore unrecognised env vars
     )
 
-    env: str = os.getenv("LOGFIRE_ENVIRONMENT")
-
     # ── LLM ────────────────────────────────────────────────────────────────────
     ai_model: str = os.getenv("AI_MODEL")
     """PydanticAI model string. Examples:
@@ -57,16 +55,48 @@ class Settings:
     resend_from: str = os.getenv("RESEND_FROM", "Moneypenny <onboarding@resend.dev>")
     """Sender address. Use a verified domain in production."""
 
-    logfire_token: str = os.getenv("LOGFIRE_TOKEN")
-    logfire_environment: str = os.getenv("LOGFIRE_ENVIRONMENT")
-    """Required for Logfire integration."""
-
     file_path: str = os.getenv("FILE_PATH")
     """Path to the knowledge base."""
 
     redis_url: str = os.getenv("REDIS_URL", "")
     """Optional Redis connection URL (e.g. redis://localhost:6379).
-    When set, the consent ledger uses Redis Streams; otherwise FileLedger (JSONL)."""
+    When set, the consent ledger uses Redis Streams; otherwise FileLedger (JSONL).
+    User memory / knowledge namespaces also use Redis when your teammate wires them up."""
+
+    # ── Arize Phoenix (trust & observability) ───────────────────────────────────
+    phoenix_enabled: bool = os.getenv("PHOENIX_ENABLED", "1") not in (
+        "0",
+        "false",
+        "False",
+        "",
+    )
+    """Export OpenTelemetry traces to Phoenix when enabled."""
+
+    phoenix_collector_endpoint: str = os.getenv(
+        "PHOENIX_COLLECTOR_ENDPOINT", "http://127.0.0.1:6006/v1/traces"
+    )
+    """OTLP HTTP endpoint for Phoenix. Local: `phoenix serve`. Cloud: space hostname."""
+
+    phoenix_api_key: str = os.getenv("PHOENIX_API_KEY", "")
+    """Bearer token for Phoenix Cloud OTLP export. Leave empty for local `phoenix serve`."""
+
+    phoenix_project_name: str = os.getenv("PHOENIX_PROJECT_NAME", "moneypenny")
+
+    consent_eval_enabled: bool = os.getenv("CONSENT_EVAL_ENABLED", "1") not in (
+        "0",
+        "false",
+        "False",
+        "",
+    )
+    """Run the self-check bypass evaluator after each gated action."""
+
+    kill_switch_on_bypass: bool = os.getenv("KILL_SWITCH_ON_BYPASS", "1") not in (
+        "0",
+        "false",
+        "False",
+        "",
+    )
+    """When a consent bypass is detected, freeze the session (fail closed)."""
     deepgram_api_key = os.getenv("DEEPGRAM_API_KEY")
     voice_provider = os.getenv("VOICE_PROVIDER")
     transcription_model = os.getenv("TRANSCRIPTION_MODEL")

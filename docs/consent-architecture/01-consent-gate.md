@@ -131,6 +131,7 @@ to `email.send`. The HMAC `Consent_Token` is still minted and written to the led
 auditable proof of consent.
 
 **Not yet implemented (still aspirational here):** the explicit
-`PENDING_CONSENT → CONSENT_CONFIRMED` Redis status machine, static Trust Tiers
-([`04-trust-tiers.md`](./04-trust-tiers.md)), and the Phoenix bypass evaluator / kill
-switch ([`03-observability-and-ledger.md`](./03-observability-and-ledger.md)).
+`PENDING_CONSENT → CONSENT_CONFIRMED` Redis status machine and static Trust Tiers
+([`04-trust-tiers.md`](./04-trust-tiers.md)). **Implemented:** Phoenix tracing +
+in-process bypass evaluator + kill switch ([`03-observability-and-ledger.md`](./03-observability-and-ledger.md))
+via `observability/`; Redis ledger backend activates when `REDIS_URL` is set.

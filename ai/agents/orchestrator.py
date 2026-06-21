@@ -11,6 +11,7 @@ def get_orchestrator() -> Agent:
     global _orchestrator
     if _orchestrator is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _orchestrator = Agent(
             model=settings.ai_model,
@@ -18,6 +19,7 @@ def get_orchestrator() -> Agent:
             system_prompt=load_prompt("orchestrator"),
             output_type=OrchestratorResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         @_orchestrator.tool

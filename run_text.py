@@ -27,6 +27,9 @@ import sys
 
 def build_check() -> None:
     """Import tools and construct every agent to validate wiring."""
+    from observability.phoenix import setup_observability
+
+    setup_observability()
     from ai.prompts import load_prompt
     from ai.agents.orchestrator import get_orchestrator
     from ai.agents.agent1 import get_email_agent
@@ -134,53 +137,18 @@ async def run_once(
     auto_approve: bool = False,
     user_id: str = "default",
 ) -> None:
-    from config import settings
     from ai.agents.orchestrator import get_orchestrator
-    from ai.agents.deps import OrchestratorDeps
-    from tools.ledger import get_ledger
+    from ai.session.deps_factory import build_orchestrator_deps
 
-    # ── Phase 4: graph knowledge + execution log (when REDIS_URL is set) ────────
-    knowledge = None
-    execution_log = None
-    if settings.redis_url:
-        try:
-            from memory.execution_log import get_execution_log
-            execution_log = get_execution_log()
-        except Exception as exc:
-            print(f"[execution_log] skipped — {exc}", flush=True)
-        if settings.openai_api_key:
-            try:
-                from memory.graph import get_graph_knowledge
-                knowledge = get_graph_knowledge()
-            except Exception as exc:
-                print(f"[graph_knowledge] skipped — {exc}", flush=True)
-
-    ledger = get_ledger()
-
-    # Load Workspace credentials if the user has connected (else None => demo mode).
-    workspace_creds = None
-    try:
-        from tools.google_auth import get_workspace_credentials, granted_scopes
-
-        workspace_creds = get_workspace_credentials()
-        if workspace_creds is not None:
-            print(f"[workspace] connected — scopes: {', '.join(granted_scopes()) or 'none'}")
-    except Exception as e:  # noqa: BLE001 — never block a run on workspace wiring
-        print(f"[workspace] not connected ({e}); calendar/gmail run in demo mode")
-
-    deps = OrchestratorDeps(
+    deps = await build_orchestrator_deps(
         user_id=user_id,
-        knowledge=knowledge,
-        execution_log=execution_log,
-        ledger=ledger,
         auto_approve=auto_approve,
         request_approval=None if auto_approve else _console_approver,
-        workspace_creds=workspace_creds,
     )
 
     result = await get_orchestrator().run(prompt, deps=deps)
-    print(result.output)
-    await _print_ledger_tail(ledger)
+    print(result.output.response)
+    await _print_ledger_tail(deps.ledger)
 
 
 async def connect_workspace() -> None:
@@ -220,6 +188,9 @@ async def disconnect_workspace() -> None:
 
 
 def main() -> None:
+    from observability.phoenix import setup_observability
+
+    setup_observability()
     args = sys.argv[1:]
 
     if not args or args[0] == "--check":

@@ -31,8 +31,8 @@ export function CapabilityPanel({
         className="border-b px-4 pb-4.25 pt-4"
         style={{borderColor: 'var(--voice-agent-border)'}}
       >
-        <span className="text-[10.3px] font-medium uppercase tracking-[1.1px] text-[#737373]">
-          System Capabilities
+        <span className="royal-display text-[15px] italic tracking-[0.1em] text-(--voice-agent-gold)">
+          The Arsenal
         </span>
       </div>
 
@@ -40,10 +40,10 @@ export function CapabilityPanel({
         <div className="flex flex-col gap-4 p-4">
           {capabilities.length === 0 ? (
             <div
-              className="flex flex-1 items-center justify-center rounded-sm border border-dashed px-4 text-center text-[11px] text-[#737373]"
+              className="flex flex-1 items-center justify-center rounded-sm border border-dashed px-4 text-center text-[11px] text-[#8a8170]"
               style={{borderColor: 'var(--voice-agent-border)'}}
             >
-              Live tools and saved drafts will appear here during and after a task.
+              Désir&rsquo;s gadgets and saved dispatches will appear here, at the ready.
             </div>
           ) : (
             capabilities.map((capability) => (

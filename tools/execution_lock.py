@@ -102,4 +102,13 @@ def require_consent(action_type: str) -> str:
             f"BLOCKED: consent for action '{grant.action_id}' has expired."
         )
     grant.consumed = True
+
+    from observability.consent_trace import active_recorder
+    from observability.kill_switch import assert_session_active
+
+    assert_session_active()
+    rec = active_recorder()
+    if rec is not None:
+        rec.tool_executed(action_type)
+
     return grant.token

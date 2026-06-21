@@ -13,6 +13,7 @@ def get_search_agent() -> Agent:
     global _search_agent
     if _search_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _search_agent = Agent(
             model=settings.ai_model,
@@ -20,6 +21,7 @@ def get_search_agent() -> Agent:
             system_prompt=load_prompt("search_agent"),
             output_type=SearchResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         @_search_agent.tool

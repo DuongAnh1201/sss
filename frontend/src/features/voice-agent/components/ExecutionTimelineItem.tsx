@@ -5,7 +5,7 @@ import {VoiceAgentIcon} from './VoiceAgentIcons';
 function statusCardClassName(status: TimelineStep['status']) {
   switch (status) {
     case 'active':
-      return 'border-[#e5e7eb] bg-[#1a1a1a]';
+      return 'border-[var(--voice-agent-gold)] bg-[#16161a]';
     case 'completed':
       return 'border-[var(--voice-agent-border)] bg-[#1a1a1a]';
     case 'waiting_approval':
@@ -22,13 +22,13 @@ function statusCardClassName(status: TimelineStep['status']) {
 function statusBadgeClassName(status: TimelineStep['status']) {
   switch (status) {
     case 'active':
-      return 'bg-[var(--voice-agent-live-accent)] text-white';
+      return 'bg-[var(--voice-agent-live-accent)] text-black';
     case 'completed':
-      return 'bg-[#262626] text-[#a3a3a3]';
+      return 'bg-[#2a2620] text-[#b8ad97]';
     case 'error':
-      return 'bg-[#ef4444] text-white';
+      return 'bg-[#c0584f] text-white';
     default:
-      return 'bg-[#171717] text-[#737373]';
+      return 'bg-[#16161a] text-[#8a8170]';
   }
 }
 
@@ -38,9 +38,9 @@ function statusIconClassName(status: TimelineStep['status']) {
       return 'border-[#ef4444] text-[#ef4444]';
     case 'waiting_approval':
     case 'blocked':
-      return 'border-[#404040] text-[#737373]';
+      return 'border-[#404040] text-[#8a8170]';
     default:
-      return 'border-[#e5e7eb] text-white';
+      return 'border-[var(--voice-agent-gold)] text-[var(--voice-agent-gold-bright)]';
   }
 }
 

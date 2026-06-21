@@ -9,9 +9,17 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from ai.agents.deps import OrchestratorDeps
+from observability.kill_switch import reset_kill_switch
 from schemas.consent import ActionDecision, ActionRequest
 from tools.execution_lock import ConsentGrant
 from tools.ledger import FileLedger
+
+
+@pytest.fixture(autouse=True)
+def _reset_kill_switch_between_tests():
+    reset_kill_switch()
+    yield
+    reset_kill_switch()
 
 
 @dataclass

@@ -15,20 +15,24 @@ function statusLabelForDraft(status: EmailDraftLifecycleStatus) {
 function statusClassNameForDraft(status: EmailDraftLifecycleStatus) {
   switch (status) {
     case 'approved':
-      return 'border-[#166534] bg-[#052e16] text-[#86efac]';
+      return 'border-[#3f5e44] bg-[#0f1a12] text-[#9ed3a6]';
     case 'rejected':
-      return 'border-[#7f1d1d] bg-[#2a1111] text-[#fca5a5]';
+      return 'border-[#5e302b] bg-[#1f1210] text-[#d99a93]';
     default:
-      return 'border-[#92400e] bg-[#2b1906] text-[#fcd34d]';
+      return 'border-[#a07e3a] bg-[#1c1608] text-[#e9cf94]';
   }
 }
 
 export function ApprovalCard({
   request,
   draftStatus = 'pending',
+  onApprove,
+  onCancel,
 }: {
   request: ApprovalRequest;
   draftStatus?: EmailDraftLifecycleStatus;
+  onApprove?: () => void;
+  onCancel?: () => void;
 }) {
   const preview = request.preview;
   const statusLabel = statusLabelForDraft(draftStatus);
@@ -58,8 +62,8 @@ export function ApprovalCard({
               {statusLabel}
             </div>
           </div>
-          <div className="mt-2 text-[22px] font-semibold tracking-[-0.02em] text-white">
-            Email Draft
+          <div className="royal-display mt-2 text-[28px] font-semibold tracking-[0.01em] text-(--voice-agent-gold-bright)">
+            Dispatch for Approval
           </div>
           <div className="mt-2 max-w-140 text-[12px] leading-6 text-[#a3a3a3]">
             {request.detail}
@@ -68,6 +72,28 @@ export function ApprovalCard({
           <div className="mt-3 rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-[11px] text-[#d4d4d4]">
             {voiceHint}
           </div>
+          {draftStatus === 'pending' && (onApprove || onCancel) ? (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {onApprove ? (
+                <button
+                  type="button"
+                  onClick={onApprove}
+                  className="rounded-sm border border-[#3f5e44] bg-[#0f1a12] px-4 py-2 text-[11px] font-medium uppercase tracking-[1px] text-[#9ed3a6] transition hover:bg-[#14301a]"
+                >
+                  Approve
+                </button>
+              ) : null}
+              {onCancel ? (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="rounded-sm border border-[#5e302b] bg-[#1f1210] px-4 py-2 text-[11px] font-medium uppercase tracking-[1px] text-[#d99a93] transition hover:bg-[#2a1515]"
+                >
+                  Cancel
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
 

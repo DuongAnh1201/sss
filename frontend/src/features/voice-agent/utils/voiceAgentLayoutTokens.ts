@@ -10,30 +10,30 @@ export const voiceAgentLayoutTokens = {
   borderRadius: 4,
   orbSize: 240,
   colors: {
-    shell: '#0a0a0a',
-    centerShell: '#0d0d0d',
-    panel: '#111111',
-    panelRaised: '#1a1a1a',
-    border: '#262626',
-    text: '#ffffff',
-    mutedText: '#a3a3a3',
-    dimText: '#737373',
-    subtleText: '#525252',
-    accent: '#0000ee',
-    success: '#22c55e',
-    warning: '#f59e0b',
-    danger: '#ef4444',
+    shell: '#08080a',
+    centerShell: '#0a0a0c',
+    panel: '#101013',
+    panelRaised: '#16161a',
+    border: '#2a2620',
+    text: '#f5f0e6',
+    mutedText: '#b8ad97',
+    dimText: '#8a8170',
+    subtleText: '#5f5949',
+    accent: '#c8a45c',
+    success: '#6fae7a',
+    warning: '#d8a85a',
+    danger: '#c0584f',
   },
 } as const;
 
 export const voiceAgentStatusCopy: Record<AgentUIState, string> = {
-  idle: 'SYSTEM: READY',
-  listening: 'SYSTEM: LISTENING',
-  processing: 'SYSTEM: PROCESSING',
-  executing: 'SYSTEM: EXECUTING',
-  waiting_approval: 'SYSTEM: APPROVAL REQUIRED',
-  completed: 'SYSTEM: COMPLETED',
-  error: 'SYSTEM: ERROR',
+  idle: 'AT YOUR SERVICE',
+  listening: 'LISTENING',
+  processing: 'DECIPHERING',
+  executing: 'IN THE FIELD',
+  waiting_approval: 'AWAITING YOUR WORD',
+  completed: 'MISSION COMPLETE',
+  error: 'COMPROMISED',
 };
 
 export const voiceAgentMicCopy: Record<AgentUIState, string> = {
@@ -47,11 +47,11 @@ export const voiceAgentMicCopy: Record<AgentUIState, string> = {
 };
 
 export const voiceAgentStatusTone: Record<AgentUIState, string> = {
-  idle: '#525252',
+  idle: '#5f5949',
   listening: 'var(--voice-agent-live-accent)',
   processing: 'var(--voice-agent-live-accent)',
   executing: 'var(--voice-agent-live-accent)',
-  waiting_approval: '#f59e0b',
-  completed: '#22c55e',
-  error: '#ef4444',
+  waiting_approval: '#d8a85a',
+  completed: '#6fae7a',
+  error: '#c0584f',
 };

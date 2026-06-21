@@ -15,12 +15,14 @@ def get_calendar_agent() -> Agent:
     global _calendar_agent
     if _calendar_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _calendar_agent = Agent(
             model=settings.ai_model,
             name="calendar_agent",
             system_prompt=load_prompt("calendar_agent"),
             output_type=CalendarResult,
+            instrument=get_agent_instrumentation(),
         )
 
         @_calendar_agent.tool

@@ -29,6 +29,7 @@ describe the guarantee.
 | [`01-consent-gate.md`](./01-consent-gate.md) | 1 | Zero-trust middleware, `ProposedAction`, Redis state, the `Consent_Token`, the execution lock |
 | [`02-fallback-matrix.md`](./02-fallback-matrix.md) | 2 | How MoneyPenny fails closed on timeout, ambiguity, desync, hallucination, and post-consent API failure |
 | [`03-observability-and-ledger.md`](./03-observability-and-ledger.md) | 3 | Phoenix tracing, the consent-bypass evaluator, the kill switch |
+| [`../observability/phoenix.md`](../observability/phoenix.md) | 2+ | Phoenix local + cloud setup and test commands |
 | [`04-trust-tiers.md`](./04-trust-tiers.md) | 4 | **Criteria for which low-risk actions earn a silent, revertible notification instead of a hard verbal stop** |
 
 ## How a real-world action flows (the healthy trace)

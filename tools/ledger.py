@@ -25,6 +25,7 @@ class ConsentLedger(Protocol):
         self, action_id: str, outcome: Outcome, message: str
     ) -> None: ...
     async def history(self, limit: int = 50) -> list[LedgerEntry]: ...
+    async def lookup(self, action_id: str) -> LedgerEntry | None: ...
 
 
 # ── File-backed ledger ─────────────────────────────────────────────────────────
@@ -106,6 +107,9 @@ class FileLedger:
         entries.sort(key=lambda e: e.request.created_at)
         return entries[-limit:]
 
+    async def lookup(self, action_id: str) -> LedgerEntry | None:
+        return self._index.get(action_id)
+
 
 # ── Redis-backed ledger ────────────────────────────────────────────────────────
 
@@ -168,6 +172,28 @@ class RedisLedger:
         entries = list(index.values())
         entries.sort(key=lambda e: e.request.created_at)
         return entries[-limit:]
+
+    async def lookup(self, action_id: str) -> LedgerEntry | None:
+        """Find one ledger row by scanning recent stream entries."""
+        raw = await self._redis.xrevrange(self.STREAM, count=500)
+        entry: LedgerEntry | None = None
+        for _msg_id, fields in reversed(raw):
+            t = fields.get("type")
+            if t == "request":
+                req = ActionRequest.model_validate_json(fields["data"])
+                if req.action_id == action_id:
+                    entry = LedgerEntry(request=req)
+            elif t == "decision" and entry is not None:
+                d = ActionDecision.model_validate_json(fields["data"])
+                if d.action_id == action_id:
+                    entry.decision = d
+            elif t == "outcome" and entry is not None:
+                if fields.get("action_id") == action_id:
+                    entry.outcome = fields["outcome"]  # type: ignore[assignment]
+                    entry.result_message = fields["message"]
+                    entry.resolved_at = datetime.fromisoformat(fields["resolved_at"])
+                    return entry
+        return entry
 
 
 # ── Factory ────────────────────────────────────────────────────────────────────

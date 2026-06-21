@@ -1,16 +1,16 @@
-import { CSSProperties } from 'react';
+import { CSSProperties } from "react";
 import {
   ApprovalRequest,
   AgentUIState,
   EmailDraftLifecycleStatus,
   TimelineStep,
   VoiceAgentCapability,
-} from '../types/voiceAgent.types';
-import { CapabilityPanel } from './CapabilityPanel';
-import { ConversationPanel } from './ConversationPanel';
-import { ExecutionTimeline } from './ExecutionTimeline';
-import { VoiceAgentHeader } from './VoiceAgentHeader';
-import { VoiceCommandBar } from './VoiceCommandBar';
+} from "../types/voiceAgent.types";
+import { CapabilityPanel } from "./CapabilityPanel";
+import { ConversationPanel } from "./ConversationPanel";
+import { ExecutionTimeline } from "./ExecutionTimeline";
+import { VoiceAgentHeader } from "./VoiceAgentHeader";
+import { VoiceCommandBar } from "./VoiceCommandBar";
 
 export function VoiceAgentOverlay({
   uiState,
@@ -26,6 +26,10 @@ export function VoiceAgentOverlay({
   accentColor,
   onOrbClick,
   onToggleCapabilityDetail,
+  onApprove,
+  onCancel,
+  onSubmitText,
+  isSessionActive = false,
 }: {
   uiState: AgentUIState;
   transcriptPreview: string;
@@ -40,13 +44,17 @@ export function VoiceAgentOverlay({
   accentColor: string;
   onOrbClick: () => void;
   onToggleCapabilityDetail: (capabilityId: string) => void;
+  onApprove?: () => void;
+  onCancel?: () => void;
+  onSubmitText?: (text: string) => void;
+  isSessionActive?: boolean;
 }) {
   return (
     <div
       className="min-h-screen bg-(--voice-agent-shell) text-white xl:h-screen xl:overflow-hidden"
       style={
         {
-          ['--voice-agent-live-accent' as string]: accentColor,
+          ["--voice-agent-live-accent" as string]: accentColor,
         } as CSSProperties
       }
     >
@@ -56,15 +64,21 @@ export function VoiceAgentOverlay({
         <main
           className="grid flex-1 xl:min-h-0 xl:overflow-hidden"
           style={{
-            gridTemplateColumns: 'minmax(0, 1fr)',
+            gridTemplateColumns: "minmax(0, 1fr)",
           }}
         >
           <div className="grid min-h-0 grid-cols-1 xl:h-full xl:grid-cols-[320px_minmax(0,1fr)_320px] xl:overflow-hidden">
-            <ConversationPanel uiState={uiState} hintText={hintText} onOrbClick={onOrbClick} />
+            <ConversationPanel
+              uiState={uiState}
+              hintText={hintText}
+              onOrbClick={onOrbClick}
+            />
             <ExecutionTimeline
               jobId={jobId}
               steps={timelineSteps}
               approvalRequest={approvalRequest}
+              onApprove={onApprove}
+              onCancel={onCancel}
             />
             <CapabilityPanel
               capabilities={capabilities}
@@ -76,7 +90,13 @@ export function VoiceAgentOverlay({
           </div>
         </main>
 
-        <VoiceCommandBar uiState={uiState} transcriptPreview={transcriptPreview} onMicClick={onOrbClick} />
+        <VoiceCommandBar
+          uiState={uiState}
+          transcriptPreview={transcriptPreview}
+          onMicClick={onOrbClick}
+          onSubmitText={onSubmitText}
+          isSessionActive={isSessionActive}
+        />
       </div>
     </div>
   );

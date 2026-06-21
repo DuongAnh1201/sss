@@ -3,7 +3,7 @@ import { AgentUIState } from '../types/voiceAgent.types';
 import { voiceAgentLayoutTokens } from '../utils/voiceAgentLayoutTokens';
 
 const orbBackground =
-  'radial-gradient(circle at 35% 28%, rgba(122,122,255,0.95) 0%, rgba(61,61,255,0.92) 32%, rgba(31,31,247,0.95) 58%, rgba(8,8,240,0.98) 82%, rgba(0,0,238,1) 100%)';
+  'radial-gradient(circle at 35% 28%, rgba(245,231,196,0.98) 0%, rgba(233,207,148,0.95) 30%, rgba(200,164,92,0.96) 58%, rgba(160,126,58,0.98) 82%, rgba(120,92,40,1) 100%)';
 
 function getGlowAnimation(uiState: AgentUIState) {
   switch (uiState) {

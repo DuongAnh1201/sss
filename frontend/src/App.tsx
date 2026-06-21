@@ -7,7 +7,8 @@ import {
 import { AudioRecorder, AudioStreamer } from "./service/audioService";
 
 const WS_URL =
-  import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:8765`;
+  import.meta.env.VITE_WS_URL ||
+  `ws://${window.location.hostname}:8765/ws`;
 
 interface RuntimeState {
   error: string | null;
@@ -17,7 +18,7 @@ interface RuntimeState {
 
 const INITIAL_RUNTIME_STATE: RuntimeState = {
   error: null,
-  themeColor: "#0000ee",
+  themeColor: "#c8a45c",
   tasks: [],
 };
 
@@ -65,6 +66,37 @@ export default function App() {
       runtimeState.themeColor,
     );
   }, [runtimeState.themeColor]);
+
+  const sendJson = (payload: Record<string, unknown>) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload));
+    }
+  };
+
+  const sendApprovalDecision = (
+    actionId: string,
+    decision: "approve" | "cancel",
+  ) => {
+    sendJson({ type: "approval_decision", action_id: actionId, decision });
+  };
+
+  const sendTextPrompt = (text: string) => {
+    sendJson({ type: "text", text });
+  };
+
+  const handleApprove = () => {
+    const actionId = voiceAgentState.approvalRequest?.id;
+    if (actionId) {
+      sendApprovalDecision(actionId, "approve");
+    }
+  };
+
+  const handleCancel = () => {
+    const actionId = voiceAgentState.approvalRequest?.id;
+    if (actionId) {
+      sendApprovalDecision(actionId, "cancel");
+    }
+  };
 
   const teardownAssistant = (fromSocket = false) => {
     audioRecorderRef.current?.stop();
@@ -182,27 +214,26 @@ export default function App() {
     try {
       audioStreamerRef.current = new AudioStreamer();
       audioRecorderRef.current = new AudioRecorder((base64) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-          wsRef.current.send(JSON.stringify({ type: "audio", data: base64 }));
-        }
+        sendJson({ type: "audio", data: base64 });
       });
       await audioRecorderRef.current.start();
     } catch (error) {
+      audioRecorderRef.current = null;
+      audioStreamerRef.current = null;
       const errorMessage = getMicrophoneErrorMessage(
         error as { name?: string },
       );
       setRuntimeState((previous) => ({
         ...previous,
-        error: errorMessage,
+        error: `${errorMessage} Text input is still available.`,
       }));
-      dispatchEvent({ type: "error", message: errorMessage });
-      return;
     }
 
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      sendJson({ type: "session_start", guest: false });
       setIsPowerOn(true);
       markSessionConnected();
     };
@@ -255,6 +286,10 @@ export default function App() {
       accentColor={runtimeState.themeColor}
       onOrbClick={togglePower}
       onToggleCapabilityDetail={toggleCapabilityDetail}
+      onApprove={handleApprove}
+      onCancel={handleCancel}
+      onSubmitText={sendTextPrompt}
+      isSessionActive={voiceAgentState.isSessionActive}
     />
   );
 }

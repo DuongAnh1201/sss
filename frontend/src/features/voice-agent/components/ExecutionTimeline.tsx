@@ -7,10 +7,14 @@ export function ExecutionTimeline({
   jobId,
   steps,
   approvalRequest,
+  onApprove,
+  onCancel,
 }: {
   jobId: string;
   steps: TimelineStep[];
   approvalRequest: ApprovalRequest | null;
+  onApprove?: () => void;
+  onCancel?: () => void;
 }) {
   const hasApprovalStep = steps.some((step) => step.status === 'waiting_approval');
   const fallbackApprovalStep: TimelineStep | null = approvalRequest && !hasApprovalStep
@@ -29,8 +33,8 @@ export function ExecutionTimeline({
         className="flex items-center justify-between border-b px-4 pb-[17px] pt-4"
         style={{borderColor: 'var(--voice-agent-border)'}}
       >
-        <span className="text-[10.7px] font-medium uppercase tracking-[1.1px] text-[#737373]">
-          Execution Timeline
+        <span className="royal-display text-[15px] italic tracking-[0.1em] text-(--voice-agent-gold)">
+          Field Log
         </span>
         <span
           className="text-[11px] text-[#525252]"
@@ -52,9 +56,11 @@ export function ExecutionTimeline({
         {steps.length === 0 && !fallbackApprovalStep ? (
           <div className="relative flex h-full min-h-[240px] items-center pl-16">
             <div>
-              <div className="text-[13px] font-semibold text-white">Awaiting command stream</div>
-              <div className="mt-2 text-[11px] text-[#737373]">
-                Activate the orb to start listening, then the execution timeline will populate incrementally.
+              <div className="royal-display text-[20px] italic text-(--voice-agent-gold-bright)">
+                Awaiting your orders
+              </div>
+              <div className="mt-2 text-[11px] leading-relaxed text-[#8a8170]">
+                Touch the orb to open the line. Every move Désir makes on your behalf is logged here, step by step.
               </div>
             </div>
           </div>
@@ -66,6 +72,8 @@ export function ExecutionTimeline({
                   <ApprovalCard
                     request={approvalRequest}
                     draftStatus="pending"
+                    onApprove={onApprove}
+                    onCancel={onCancel}
                   />
                 ) : null}
               </ExecutionTimelineItem>
@@ -75,6 +83,8 @@ export function ExecutionTimeline({
                 <ApprovalCard
                   request={approvalRequest}
                   draftStatus="pending"
+                  onApprove={onApprove}
+                  onCancel={onCancel}
                 />
               </ExecutionTimelineItem>
             ) : null}

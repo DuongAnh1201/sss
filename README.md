@@ -207,25 +207,29 @@ The ring is the consent principle made physical: it **glows white** while listen
 ### Prerequisites
 
 - Python 3.13+, Node.js 18+, [uv](https://docs.astral.sh/uv/)
-- API keys: Deepgram, Redis, Arize/Phoenix, Resend, web search, Google OAuth credentials
+- API keys: OpenAI, Resend, Serper (optional: Deepgram, Redis, Google OAuth)
+- Observability: [Phoenix local or cloud](docs/observability/phoenix.md) (optional for dev; recommended for staging)
 - (Optional) A Fetch.ai / Agentverse account for the agent network features
 
 ### Run it
 
 ```bash
 git clone <your-repo-url>
-cd moneypenny
+cd sss
 uv sync
 cd frontend && npm install && cd ..
 
-# Terminal 1 — backend
+# Terminal 1 — backend (WebSocket on ws://localhost:8765/ws)
 uv run python server.py
+
+# Optional — Phoenix traces UI (local)
+uv run phoenix serve
 
 # Terminal 2 — frontend
 cd frontend && npm run dev
 ```
 
-Open the app, connect your Google account when prompted, press the power button, and talk.
+Open the app, press the orb to connect, type an instruction (e.g. *Email Priya the deck is ready*), and approve actions from the Field Log card.
 
 ### Try the live demo
 

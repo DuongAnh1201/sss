@@ -20,6 +20,7 @@ def get_drive_agent() -> Agent:
     global _drive_agent
     if _drive_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _drive_agent = Agent(
             model=settings.ai_model,
@@ -27,6 +28,7 @@ def get_drive_agent() -> Agent:
             system_prompt=load_prompt("drive_agent"),
             output_type=DriveResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         # ── Reads (no side effect, not gated) ────────────────────────────────────

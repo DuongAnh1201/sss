@@ -13,6 +13,7 @@ def get_communication_agent() -> Agent:
     global _communication_agent
     if _communication_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _communication_agent = Agent(
             model=settings.ai_model,
@@ -20,6 +21,7 @@ def get_communication_agent() -> Agent:
             system_prompt=load_prompt("communication_agent"),
             output_type=CommunicationResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         @_communication_agent.tool

@@ -12,13 +12,18 @@ export function VoiceAgentHeader({ uiState }: { uiState: AgentUIState }) {
         borderColor: "var(--voice-agent-border)",
       }}
     >
-      <div className="flex items-center gap-2">
-        <div className="flex h-6 w-6 items-center justify-center rounded-xs bg-(--voice-agent-live-accent) text-white">
-          <VoiceAgentIcon name="moneypenny" className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-3">
+        <div className="crest-frame flex h-8 w-8 items-center justify-center rounded-full text-(--voice-agent-gold-bright)">
+          <VoiceAgentIcon name="moneypenny" className="h-4 w-4" />
         </div>
-        <span className="text-[17.6px] font-bold tracking-[-0.45px] text-white">
-          DESIR
-        </span>
+        <div className="flex flex-col leading-none">
+          <span className="royal-display text-[22px] font-semibold tracking-[0.14em] text-(--voice-agent-gold-bright)">
+            DÉSIR
+          </span>
+          <span className="mt-0.5 text-[8px] font-medium uppercase tracking-[3px] text-[#8a8170]">
+            On Her Majesty&rsquo;s Service
+          </span>
+        </div>
       </div>
 
       <div className="absolute left-1/2 hidden -translate-x-1/2 md:flex">

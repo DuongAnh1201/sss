@@ -21,6 +21,7 @@ def get_gmail_agent() -> Agent:
     global _gmail_agent
     if _gmail_agent is None:
         from config import settings
+        from observability.phoenix import get_agent_instrumentation
 
         _gmail_agent = Agent(
             model=settings.ai_model,
@@ -28,6 +29,7 @@ def get_gmail_agent() -> Agent:
             system_prompt=load_prompt("gmail_agent"),
             output_type=GmailResult,
             deps_type=OrchestratorDeps,
+            instrument=get_agent_instrumentation(),
         )
 
         # ── Reads (no side effect, not gated) ────────────────────────────────────
