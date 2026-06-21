@@ -81,7 +81,7 @@ export function ExecutionTimeline({
                 Awaiting your orders
               </div>
               <div className="mt-2 text-[11px] leading-relaxed text-[#8a8170]">
-                Touch the orb to open the line. Every move Désir makes on your behalf is logged here, step by step.
+                Touch the orb to open the line. Every move MoneyPenny makes on your behalf is logged here, step by step.
               </div>
             </div>
           </div>

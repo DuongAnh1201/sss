@@ -43,7 +43,7 @@ export function CapabilityPanel({
               className="flex flex-1 items-center justify-center rounded-sm border border-dashed px-4 text-center text-[11px] text-[#8a8170]"
               style={{borderColor: 'var(--voice-agent-border)'}}
             >
-              Désir&rsquo;s gadgets and saved dispatches will appear here, at the ready.
+              MoneyPenny&rsquo;s gadgets and saved dispatches will appear here, at the ready.
             </div>
           ) : (
             capabilities.map((capability) => (

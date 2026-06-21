@@ -6,7 +6,6 @@ import {
   ExecutionRecord,
   VoiceAgentCapability,
 } from "../types/voiceAgent.types";
-import { CapabilityPanel } from "./CapabilityPanel";
 import { ConversationPanel } from "./ConversationPanel";
 import { ExecutionTimeline } from "./ExecutionTimeline";
 import { VoiceAgentHeader } from "./VoiceAgentHeader";
@@ -67,7 +66,7 @@ export function VoiceAgentOverlay({
             gridTemplateColumns: "minmax(0, 1fr)",
           }}
         >
-          <div className="grid min-h-0 grid-cols-1 xl:h-full xl:grid-cols-[320px_minmax(0,1fr)_320px] xl:overflow-hidden">
+          <div className="grid min-h-0 grid-cols-1 xl:h-full xl:grid-cols-[320px_minmax(0,1fr)] xl:overflow-hidden">
             <ConversationPanel
               uiState={uiState}
               hintText={hintText}
@@ -79,13 +78,6 @@ export function VoiceAgentOverlay({
               approvalRequest={approvalRequest}
               onApprove={onApprove}
               onCancel={onCancel}
-            />
-            <CapabilityPanel
-              capabilities={capabilities}
-              selectedCapabilityId={selectedCapabilityId}
-              latestEmailDraft={latestEmailDraft}
-              latestEmailDraftStatus={latestEmailDraftStatus}
-              onToggleCapability={onToggleCapabilityDetail}
             />
           </div>
         </main>

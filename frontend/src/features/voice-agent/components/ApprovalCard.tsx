@@ -57,7 +57,7 @@ export function ApprovalCard({
   const recipientLabel = isEmailLike ? 'Recipient' : 'Send to';
   const voiceHint =
     draftStatus === 'pending'
-      ? "Say 'send it', 'cancel it', or tell Désir what to change."
+      ? "Say 'send it', 'cancel it', or tell MoneyPenny what to change."
       : draftStatus === 'approved'
         ? 'Confirmed by voice.'
         : 'Cancelled by voice.';
