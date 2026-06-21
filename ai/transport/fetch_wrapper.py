@@ -183,14 +183,23 @@ def _build_agent() -> Agent:
             "Add a stable seed phrase to .env so MoneyPenny has a fixed Fetch.ai address."
         )
 
-    # Mailbox auth uses the agent's seed-derived private key — no API key needed.
-    # This lets Railway connect outbound to Agentverse without any exposed port.
-    agent = Agent(
-        name="moneypenny",
-        seed=settings.fetch_agent_seed,
-        port=settings.fetch_agent_port,
-        mailbox=True,
-    )
+    # On Railway (or any host with a public URL): register with that endpoint so the
+    # Agentverse inspector can reach the agent and create the mailbox.
+    # Locally (no public URL): fall back to outbound-only mailbox mode.
+    if settings.fetch_agent_endpoint:
+        agent = Agent(
+            name="moneypenny",
+            seed=settings.fetch_agent_seed,
+            port=settings.fetch_agent_port,
+            endpoint=[settings.fetch_agent_endpoint],
+        )
+    else:
+        agent = Agent(
+            name="moneypenny",
+            seed=settings.fetch_agent_seed,
+            port=settings.fetch_agent_port,
+            mailbox=True,
+        )
 
     @agent.on_event("startup")
     async def on_startup(ctx: Context) -> None:
