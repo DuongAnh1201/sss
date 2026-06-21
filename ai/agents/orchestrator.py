@@ -1,4 +1,4 @@
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 
 from ai.prompts import load_prompt
 from ai.agents.deps import OrchestratorDeps
@@ -22,8 +22,30 @@ def get_orchestrator() -> Agent:
             instrument=get_agent_instrumentation(),
         )
 
+        # ── Dynamic context: inject user identity + bio at runtime ───────────────
+
+        @_orchestrator.system_prompt
+        async def inject_user_context(ctx: RunContext[OrchestratorDeps]) -> str:
+            parts: list[str] = []
+            if ctx.deps.name:
+                parts.append(f"User's name: {ctx.deps.name} (address them as {ctx.deps.preferred_pronouns}).")
+            if ctx.deps.email_address:
+                parts.append(f"User's email: {ctx.deps.email_address}.")
+            if ctx.deps.user_history_context:
+                parts.append(f"## User Background\n{ctx.deps.user_history_context}")
+            return "\n".join(parts)
+
+        # ── Sub-agent delegation tools ─────────────────────────────────────────
+
         @_orchestrator.tool
-        async def delegate_email(ctx, to: str, subject: str, body: str, email_type: str = "user_request", link: str = "") -> str:
+        async def delegate_email(
+            ctx: RunContext[OrchestratorDeps],
+            to: str,
+            subject: str,
+            body: str,
+            email_type: str = "user_request",
+            link: str = "",
+        ) -> str:
             """Delegate an email-sending request to the email sub-agent.
             email_type must be 'notification' (styled HTML) or 'user_request' (plain text).
             """
@@ -35,7 +57,10 @@ def get_orchestrator() -> Agent:
             return result.output.message
 
         @_orchestrator.tool
-        async def delegate_calendar(ctx, request: str) -> str:
+        async def delegate_calendar(
+            ctx: RunContext[OrchestratorDeps],
+            request: str,
+        ) -> str:
             """Delegate any calendar request to the calendar sub-agent.
             Pass the full user request as-is, including event IDs from ctx.deps.calendar_event_ids when available.
             Known event IDs are injected automatically.
@@ -48,20 +73,27 @@ def get_orchestrator() -> Agent:
             if known_ids:
                 prompt += f"\n\nKnown event IDs: {known_ids}"
             result = await get_calendar_agent().run(prompt, deps=ctx.deps)
-            # Save any returned event_id under the event title for future use
             if result.output.event_id and result.output.title:
                 ctx.deps.calendar_event_ids[result.output.title] = result.output.event_id
             return result.output.message
 
         @_orchestrator.tool
-        async def delegate_search(ctx, query: str) -> str:
+        async def delegate_search(
+            ctx: RunContext[OrchestratorDeps],
+            query: str,
+        ) -> str:
             """Delegate a web search to the search sub-agent."""
             from ai.agents.agent3 import get_search_agent
             result = await get_search_agent().run(query, deps=ctx.deps)
             return result.output.summary
 
         @_orchestrator.tool
-        async def delegate_communication(ctx, recipient: str, action: str, message: str = "") -> str:
+        async def delegate_communication(
+            ctx: RunContext[OrchestratorDeps],
+            recipient: str,
+            action: str,
+            message: str = "",
+        ) -> str:
             """Delegate an iMessage or phone call to the communication sub-agent."""
             from ai.agents.agent4 import get_communication_agent
             prompt = (
@@ -94,7 +126,10 @@ def get_orchestrator() -> Agent:
             return result.output.message
 
         @_orchestrator.tool
-        async def delegate_knowledge_base(ctx, request: str) -> str:
+        async def delegate_knowledge_base(
+            ctx: RunContext[OrchestratorDeps],
+            request: str,
+        ) -> str:
             """Delegate a knowledge base operation to the knowledge base sub-agent.
             Use for saving, retrieving, updating, or linking information.
             Pass the full user request as-is.

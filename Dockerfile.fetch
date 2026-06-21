@@ -1,0 +1,14 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+RUN pip install uv --no-cache-dir
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY . .
+
+# Agentverse mailbox connects outbound — no inbound port needed.
+# FETCH_AGENT_PORT is only used when running with a public endpoint instead of mailbox.
+CMD ["uv", "run", "python", "-m", "ai.transport.fetch_wrapper"]
