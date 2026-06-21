@@ -47,13 +47,15 @@ class SSSRequest(Model):
     """Sent by any other Agentverse agent to invoke MoneyPenny directly."""
     text: str
     user_id: str = "agent_guest"
+    correlation_id: str = ""  # echoed back in SSSResponse for request-response bridging
 
 
 class SSSResponse(Model):
     """MoneyPenny's reply to a direct SSSRequest."""
     text: str
-    intent: str
+    intent: str = "unknown"
     success: bool = True
+    correlation_id: str = ""  # matches the SSSRequest.correlation_id that triggered this
 
 
 # ── Outbound queue ─────────────────────────────────────────────────────────────
@@ -163,7 +165,12 @@ async def handle_request(ctx: Context, sender: str, msg: SSSRequest) -> None:
     logger.info("[fetch/desir] ← %s: %s", sender[:20], msg.text[:100])
     try:
         response_text, intent = await _run_orchestrator(msg.text, msg.user_id)
-        await ctx.send(sender, SSSResponse(text=response_text, intent=intent, success=True))
+        await ctx.send(sender, SSSResponse(
+            text=response_text,
+            intent=intent,
+            success=True,
+            correlation_id=msg.correlation_id,
+        ))
         logger.info("[fetch/desir] → %s (%s): %s", sender[:20], intent, response_text[:80])
     except Exception as exc:
         logger.exception("[fetch/desir] orchestrator error for %s", sender)
@@ -171,7 +178,25 @@ async def handle_request(ctx: Context, sender: str, msg: SSSRequest) -> None:
             text=f"MoneyPenny encountered an error: {exc}",
             intent="unknown",
             success=False,
+            correlation_id=msg.correlation_id,
         ))
+
+
+@desir_protocol.on_message(model=SSSResponse)
+async def handle_response(ctx: Context, sender: str, msg: SSSResponse) -> None:
+    """Handle a response arriving from a remote agent we messaged via the bridge."""
+    logger.info("[fetch/desir] response ← %s (corr=%s): %s",
+                sender[:20], msg.correlation_id[:8] if msg.correlation_id else "?", msg.text[:100])
+    if not msg.correlation_id or not settings.redis_url:
+        return
+    try:
+        import redis.asyncio as aioredis
+        from ai.transport.bridge import post_agent_response
+        r = aioredis.from_url(settings.redis_url, decode_responses=True)
+        await post_agent_response(r, msg.correlation_id, msg.text, msg.success)
+        await r.aclose()
+    except Exception as exc:
+        logger.error("[fetch/desir] failed to post bridge response: %s", exc)
 
 
 # ── Agent factory ─────────────────────────────────────────────────────────────
@@ -232,6 +257,7 @@ def _build_agent() -> Agent:
 
     @agent.on_interval(period=2.0)
     async def flush_outbound(ctx: Context) -> None:
+        # In-process queue (fire-and-forget, no response expected)
         while not _outbound.empty():
             task = _outbound.get_nowait()
             try:
@@ -239,6 +265,29 @@ def _build_agent() -> Agent:
                 logger.info("[fetch] outbound → %s: %s", task.address[:20], task.text[:80])
             except Exception as exc:
                 logger.error("[fetch] failed to send to %s: %s", task.address[:20], exc)
+
+        # Bridge queue: requests from the FastAPI process expecting a response
+        if not settings.redis_url:
+            return
+        try:
+            import redis.asyncio as aioredis
+            from ai.transport.bridge import pop_outbound_request
+            r = aioredis.from_url(settings.redis_url, decode_responses=True,
+                                  socket_connect_timeout=3, socket_timeout=3)
+            while True:
+                task = await pop_outbound_request(r)
+                if task is None:
+                    break
+                logger.info("[fetch] bridge → %s (corr=%s): %s",
+                            task["address"][:20], task["correlation_id"][:8], task["text"][:80])
+                await ctx.send(task["address"], SSSRequest(
+                    text=task["text"],
+                    user_id="moneypenny",
+                    correlation_id=task["correlation_id"],
+                ))
+            await r.aclose()
+        except Exception as exc:
+            logger.warning("[fetch] bridge poll error: %s", exc)
 
     agent.include(chat_protocol, publish_manifest=True)
     agent.include(desir_protocol, publish_manifest=True)

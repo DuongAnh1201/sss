@@ -144,4 +144,17 @@ def get_orchestrator() -> Agent:
             result = await get_knowledge_base_agent().run(request, deps=ctx.deps)
             return result.output.message
 
+        @_orchestrator.tool
+        async def delegate_agentverse(
+            ctx: RunContext[OrchestratorDeps],
+            request: str,
+        ) -> str:
+            """Discover or message another AI agent on the Fetch.ai Agentverse network.
+            Use when the user wants to contact, query, or delegate a task to an external agent.
+            Pass the full user request as-is.
+            """
+            from ai.agents.agent8 import get_agentverse_agent
+            result = await get_agentverse_agent().run(request, deps=ctx.deps)
+            return result.output if isinstance(result.output, str) else str(result.output)
+
     return _orchestrator
