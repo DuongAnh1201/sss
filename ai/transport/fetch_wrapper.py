@@ -194,16 +194,18 @@ def _build_agent() -> Agent:
 
     @agent.on_event("startup")
     async def on_startup(ctx: Context) -> None:
+        addr = agent.address
         print()
         print("─" * 60)
         print("  MoneyPenny (Fetch.ai uAgent)")
-        print(f"  Address : {ctx.address}")
+        print(f"  Address : {addr}")
         print(f"  Mailbox : connecting to Agentverse...")
         print()
         print("  Next steps:")
-        print("  1. Go to agentverse.ai -> Functions -> + New Function")
-        print(f"     Set agent address: {ctx.address}")
-        print("  2. That makes MoneyPenny discoverable on ASI:One")
+        print("  1. Open the agent inspector URL printed above and click 'Connect Mailbox'")
+        print("  2. Go to agentverse.ai -> Functions -> + New Function")
+        print(f"     Set agent address: {addr}")
+        print("  3. That makes MoneyPenny discoverable on ASI:One")
         print("─" * 60)
         print()
 
