@@ -183,28 +183,14 @@ def _build_agent() -> Agent:
             "Add a stable seed phrase to .env so MoneyPenny has a fixed Fetch.ai address."
         )
 
-    use_mailbox = bool(settings.agentverse_api_key)
-
-    if use_mailbox:
-        # Mailbox mode: agent connects outbound to Agentverse — no public endpoint needed.
-        agent = Agent(
-            name="moneypenny",
-            seed=settings.fetch_agent_seed,
-            port=settings.fetch_agent_port,
-            mailbox=True,
-        )
-    else:
-        # Endpoint mode: Agentverse POSTs directly to our public URL.
-        public_url = (
-            settings.fetch_agent_endpoint.rstrip("/")
-            or f"http://localhost:{settings.fetch_agent_port}"
-        )
-        agent = Agent(
-            name="moneypenny",
-            seed=settings.fetch_agent_seed,
-            port=settings.fetch_agent_port,
-            endpoint=[f"{public_url}/submit"],
-        )
+    # Mailbox auth uses the agent's seed-derived private key — no API key needed.
+    # This lets Railway connect outbound to Agentverse without any exposed port.
+    agent = Agent(
+        name="moneypenny",
+        seed=settings.fetch_agent_seed,
+        port=settings.fetch_agent_port,
+        mailbox=True,
+    )
 
     @agent.on_event("startup")
     async def on_startup(ctx: Context) -> None:
@@ -212,10 +198,12 @@ def _build_agent() -> Agent:
         print("─" * 60)
         print("  MoneyPenny (Fetch.ai uAgent)")
         print(f"  Address : {ctx.address}")
-        print(f"  Port    : {settings.fetch_agent_port}")
-        mailbox_status = "enabled" if settings.agentverse_api_key else "disabled (set AGENTVERSE_API_KEY)"
-        print(f"  Mailbox : {mailbox_status}")
-        print("  ASI:One : Chat Protocol registered — create a Function on agentverse.ai")
+        print(f"  Mailbox : connecting to Agentverse...")
+        print()
+        print("  Next steps:")
+        print("  1. Go to agentverse.ai -> Functions -> + New Function")
+        print(f"     Set agent address: {ctx.address}")
+        print("  2. That makes MoneyPenny discoverable on ASI:One")
         print("─" * 60)
         print()
 
