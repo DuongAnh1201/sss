@@ -1,0 +1,16 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+RUN pip install uv --no-cache-dir
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY . .
+
+# PORT is injected by Railway (and other PaaS platforms) at runtime.
+# The app reads it via config.fetch_agent_port — no need to hardcode here.
+EXPOSE 8001
+
+CMD ["uv", "run", "python", "-m", "ai.transport.fetch_wrapper"]

@@ -75,6 +75,29 @@ class Settings:
     consent_secret: str = os.getenv(
         "CONSENT_SECRET", "moneypenny-dev-consent-secret-change-me"
     )
+
+
+    # ── Fetch.ai / Agentverse ───────────────────────────────────────────────────
+    fetch_agent_seed: str = os.getenv("FETCH_AGENT_SEED", "")
+    """Stable seed phrase that determines MoneyPenny's Fetch.ai address.
+    Generate once and keep it secret — changing it changes the address."""
+
+    agentverse_api_key: str = os.getenv("AGENTVERSE_API_KEY", "")
+    """Agentverse mailbox API key from agentverse.ai.
+    Required for cloud hosting (receiving messages when not running locally)."""
+
+    fetch_agent_port: int = int(os.getenv("PORT", os.getenv("FETCH_AGENT_PORT", "8001")))
+    """Port the uAgent HTTP server listens on.
+    Railway injects $PORT automatically; falls back to FETCH_AGENT_PORT, then 8001."""
+
+    fetch_agent_endpoint: str = os.getenv(
+        "FETCH_AGENT_ENDPOINT",
+        ("https://" + os.getenv("RAILWAY_PUBLIC_DOMAIN")) if os.getenv("RAILWAY_PUBLIC_DOMAIN") else "",
+    )
+    """Public HTTPS URL where the uAgent is reachable.
+    Auto-detected from $RAILWAY_PUBLIC_DOMAIN on Railway.
+    Set FETCH_AGENT_ENDPOINT manually for other hosts (e.g. ngrok, Render).
+    Leave empty to run in local/mailbox-only mode."""
     """Server-side secret used to mint Consent_Tokens (HMAC-SHA256).
     MUST be overridden in production; the default is for local/demo only."""
 
