@@ -190,13 +190,34 @@ sequenceDiagram
 
 ---
 
-## Optional: The MoneyPenny Orb (Hardware Companion)
+## The Zero-Trust Physical Consent Gate (Hardware)
 
-*A small physical device — a mic, a speaker, and a glowing ring — that lets you talk to MoneyPenny without a screen.*
+*A Raspberry Pi 5 running QNX that turns consent into something you physically touch — a 2FA token for high-stakes actions that no LLM can press for you.*
 
-The ring is the consent principle made physical: it **glows white** while listening, **thinks in blue** while working, and **pulses amber** when MoneyPenny is waiting for your approval. You never have to wonder whether it's about to do something — the light tells you, and nothing happens until you say the word. Your assistant, always at the desk, waiting for your word.
+The software consent gate already blocks every side effect until a human approves. The hardware token makes that approval **out-of-band**: the decision happens on a physical switch the model has no access to.
 
-*(Include this section if entering the hardware track; remove it otherwise.)*
+- **I2C LCD1602** — shows the pending action: `[PENDING] Confirm Sync with Marcus?`
+- **RGB LED** — slowly pulses **yellow** while a consequential action awaits approval (common-anode, inverted GPIO logic).
+- **Touch switch** — you physically **tap to approve**; long-press to cancel.
+- **Active buzzer** — a satisfying **chirp** + **green flash** confirms execution.
+
+With `PHYSICAL_CONSENT_REQUIRED=1`, the browser/voice UI can *preview* an action but **cannot approve it** — only a tap on the Pi can. If the token is offline, the system **fails closed**. The tap still flows through the same HMAC consent token, ledger, and execution lock as every other approval.
+
+Two transports are supported so it works on any network (including a phone hotspot with only IPv6):
+
+- **Mode A** — the Pi connects out to the laptop over WebSocket (`/ws/device`).
+- **Mode B** — the laptop connects to a tiny RPC server on the Pi (`consent_hw_server.py`), ideal when only the laptop can resolve the Pi by name.
+
+On QNX the GPIO/I2C use the native `rpi_gpio` + `smbus` modules — no `lgpio`, no extra packages. Full wiring, QNX setup, and protocol: **[docs/hardware/consent-token-gate.md](docs/hardware/consent-token-gate.md)**.
+
+```bash
+# On the Pi (QNX)
+python hardware/consent_hw_server.py --qnx
+
+# On the laptop (.env)
+CONSENT_HW_HOST=qnxpi24.local
+PHYSICAL_CONSENT_REQUIRED=1
+```
 
 ---
 
@@ -250,7 +271,7 @@ A hosted version is available at **[your-demo-url]**. Open it, choose "Try as Gu
 - [ ] **Open-network hiring — discover and pay specialist agents (Fetch.ai)**
 - [ ] Consent policies — set trust tiers so MoneyPenny only interrupts when it matters
 - [ ] Proactive reminders — MoneyPenny reaches out to you first
-- [ ] Hardware companion (the MoneyPenny Orb)
+- [x] **Zero-trust physical consent gate — Raspberry Pi 5 + QNX (LCD, RGB, touch, buzzer)**
 
 ---
 

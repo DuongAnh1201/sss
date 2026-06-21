@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
-from ai.prompts import load_prompt
+from ai.prompts import load_soul
 from tools.ledger import ConsentLedger, get_ledger
 from schemas.consent import ActionDecision, ActionRequest
 
-_USER_HISTORY = load_prompt("tombio")
+_SOUL = load_soul()
 
 
 @dataclass
@@ -20,8 +20,8 @@ class OrchestratorDeps:
     preferred_pronouns: str = field(default="Sir")
     name: str = field(default="")
     email_address: str = field(default="")
-    user_history_context: str = field(default=_USER_HISTORY)
-    """Background bio for the current user, injected into the orchestrator system prompt."""
+    user_history_context: str = field(default=_SOUL)
+    """Assistant soul (``doc/SOUL.md``) — identity, voice, and behavior rules."""
     search_api_key: str = field(default="")
     calendar_event_ids: dict = field(default_factory=dict)
 

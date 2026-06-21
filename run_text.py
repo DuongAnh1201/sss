@@ -30,7 +30,7 @@ def build_check() -> None:
     from observability.phoenix import setup_observability
 
     setup_observability()
-    from ai.prompts import load_prompt
+    from ai.prompts import load_prompt, load_soul
     from ai.agents.orchestrator import get_orchestrator
     from ai.agents.agent1 import get_email_agent
     from ai.agents.agent2 import get_calendar_agent
@@ -56,9 +56,9 @@ def build_check() -> None:
         "knowledge_base_agent",
         "gmail_agent",
         "drive_agent",
-        "tombio",
     ):
         load_prompt(name)
+    load_soul()
 
     agents = {
         "orchestrator": get_orchestrator(),

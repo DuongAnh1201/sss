@@ -32,7 +32,7 @@ def get_orchestrator() -> Agent:
             if ctx.deps.email_address:
                 parts.append(f"User's email: {ctx.deps.email_address}.")
             if ctx.deps.user_history_context:
-                parts.append(f"## User Background\n{ctx.deps.user_history_context}")
+                parts.append(f"## Soul\n{ctx.deps.user_history_context}")
             return "\n".join(parts)
 
         # ── Sub-agent delegation tools ─────────────────────────────────────────
