@@ -31,7 +31,7 @@ def _live_creds(surface: str, scope_keyword: str):
     from tools import DEMO_MODE
 
     if DEMO_MODE:
-        pytest.skip(f"demo mode is on — set DESIR_DEMO=0 to run live Google {surface} tests")
+        pytest.skip(f"demo mode is on — set MONEYPENNY_DEMO=0 to run live Google {surface} tests")
 
     from tools.google_auth import get_workspace_credentials, granted_scopes
 

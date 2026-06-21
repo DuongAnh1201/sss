@@ -18,7 +18,7 @@ export function VoiceAgentHeader({ uiState }: { uiState: AgentUIState }) {
         </div>
         <div className="flex flex-col leading-none">
           <span className="royal-display text-[22px] font-semibold tracking-[0.14em] text-(--voice-agent-gold-bright)">
-            MONEYPENNY
+            MoneyPenny
           </span>
           <span className="mt-0.5 text-[8px] font-medium uppercase tracking-[3px] text-[#8a8170]">
             On Her Majesty&rsquo;s Service

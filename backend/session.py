@@ -108,10 +108,10 @@ class AgentSession:
                     "type": "transcript",
                     "role": "assistant",
                     "text": (
-                        "Good evening. I'm Désir — at your service. "
+                        "Good evening. I'm MoneyPenny — at your service. "
                         "What shall we handle first?"
                         if not self._guest
-                        else "Welcome, Guest. I'm Désir in demo mode — try asking me to draft an email."
+                        else "Welcome, Guest. I'm MoneyPenny in demo mode — try asking me to draft an email."
                     ),
                 }
             )
@@ -251,7 +251,7 @@ class AgentSession:
                         await worker
 
                 self._turns.append({"user": prompt, "assistant": response})
-                logger.info("[désir] %s", response)
+                logger.info("[moneypenny] %s", response)
                 await self.send_json({"type": "transcript", "role": "assistant", "text": response})
                 await self.send_json({"type": "completed", "message": "Ready for your next instruction."})
             except SessionFrozenError as exc:

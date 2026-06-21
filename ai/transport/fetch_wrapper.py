@@ -7,7 +7,7 @@ Publishes the orchestrator as a uAgent on the Fetch.ai network so it can:
 
 Two protocols are registered:
   - Chat Protocol  (uagents_core) — required for ASI:One / AI Engine discovery
-  - DesirProtocol  (custom)       — direct agent-to-agent messaging with intent metadata
+  - MoneyPennyProtocol  (custom)       — direct agent-to-agent messaging with intent metadata
 
 Quick start
 -----------
@@ -178,16 +178,16 @@ async def handle_chat_ack(ctx: Context, sender: str, msg: ChatAcknowledgement) -
     logger.debug("[fetch/chat] ack from %s for msg %s", sender[:20], msg.acknowledged_msg_id)
 
 
-# ── Protocol 2: DesirProtocol (direct agent-to-agent) ─────────────────────────
+# ── Protocol 2: MoneyPennyProtocol (direct agent-to-agent) ───────────────────
 # Custom protocol for agents that want intent metadata in the response.
 
-desir_protocol = Protocol(name="DesirProtocol", version="1.0.0")
+moneypenny_protocol = Protocol(name="MoneyPennyProtocol", version="1.0.0")
 
 
-@desir_protocol.on_message(model=SSSRequest, replies={SSSResponse})
+@moneypenny_protocol.on_message(model=SSSRequest, replies={SSSResponse})
 async def handle_request(ctx: Context, sender: str, msg: SSSRequest) -> None:
     """Handle a direct SSSRequest from another Agentverse agent."""
-    logger.info("[fetch/desir] ← %s: %s", sender[:20], msg.text[:100])
+    logger.info("[fetch/moneypenny] ← %s: %s", sender[:20], msg.text[:100])
     try:
         response_text, intent = await _run_orchestrator(msg.text, msg.user_id)
         await ctx.send(sender, SSSResponse(
@@ -196,9 +196,9 @@ async def handle_request(ctx: Context, sender: str, msg: SSSRequest) -> None:
             success=True,
             correlation_id=msg.correlation_id,
         ))
-        logger.info("[fetch/desir] → %s (%s): %s", sender[:20], intent, response_text[:80])
+        logger.info("[fetch/moneypenny] → %s (%s): %s", sender[:20], intent, response_text[:80])
     except Exception as exc:
-        logger.exception("[fetch/desir] orchestrator error for %s", sender)
+        logger.exception("[fetch/moneypenny] orchestrator error for %s", sender)
         await ctx.send(sender, SSSResponse(
             text=f"MoneyPenny encountered an error: {exc}",
             intent="unknown",
@@ -207,10 +207,10 @@ async def handle_request(ctx: Context, sender: str, msg: SSSRequest) -> None:
         ))
 
 
-@desir_protocol.on_message(model=SSSResponse)
+@moneypenny_protocol.on_message(model=SSSResponse)
 async def handle_response(ctx: Context, sender: str, msg: SSSResponse) -> None:
     """Handle a response arriving from a remote agent we messaged via the bridge."""
-    logger.info("[fetch/desir] response ← %s (corr=%s): %s",
+    logger.info("[fetch/moneypenny] response ← %s (corr=%s): %s",
                 sender[:20], msg.correlation_id[:8] if msg.correlation_id else "?", msg.text[:100])
     if not msg.correlation_id or not settings.redis_url:
         return
@@ -221,7 +221,7 @@ async def handle_response(ctx: Context, sender: str, msg: SSSResponse) -> None:
         await post_agent_response(r, msg.correlation_id, msg.text, msg.success)
         await r.aclose()
     except Exception as exc:
-        logger.error("[fetch/desir] failed to post bridge response: %s", exc)
+        logger.error("[fetch/moneypenny] failed to post bridge response: %s", exc)
 
 
 # ── Agent factory ─────────────────────────────────────────────────────────────
@@ -317,7 +317,7 @@ def _build_agent() -> Agent:
             _bridge_redis = None  # force reconnect on next tick
 
     agent.include(chat_protocol, publish_manifest=True)
-    agent.include(desir_protocol, publish_manifest=True)
+    agent.include(moneypenny_protocol, publish_manifest=True)
     return agent
 
 

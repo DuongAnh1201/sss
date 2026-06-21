@@ -6,12 +6,12 @@ No external recipient is ever contacted.
 
 Gating (all must hold, else skipped):
   1. ``RUN_GOOGLE_INTEGRATION=1``,
-  2. ``DESIR_DEMO=0``,
+  2. ``MONEYPENNY_DEMO=0``,
   3. a connected token with a Gmail scope (``gmail.modify`` is needed for triage,
      and this test also sends a fixture mail to self, which needs ``gmail.send``).
 
 Run (PowerShell):
-    $env:DESIR_DEMO="0"; $env:RUN_GOOGLE_INTEGRATION="1"
+    $env:MONEYPENNY_DEMO="0"; $env:RUN_GOOGLE_INTEGRATION="1"
     uv run pytest tests/workspace/test_google_gmail_integration.py -v -s
 
 Flow: send-to-self -> search -> read -> mark read/star/archive (gated) ->
