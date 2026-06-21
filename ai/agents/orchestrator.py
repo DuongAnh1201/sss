@@ -63,27 +63,6 @@ def get_orchestrator() -> Agent:
             return result.output.message
 
         @_orchestrator.tool
-        async def delegate_calendar(
-            ctx: RunContext[OrchestratorDeps],
-            request: str,
-        ) -> str:
-            """Delegate any calendar request to the calendar sub-agent.
-            Pass the full user request as-is, including event IDs from ctx.deps.calendar_event_ids when available.
-            Known event IDs are injected automatically.
-            """
-            from datetime import datetime
-            from ai.agents.agent2 import get_calendar_agent
-            known_ids = ctx.deps.calendar_event_ids
-            now = datetime.now().strftime("%Y-%m-%d %H:%M (%A)")
-            prompt = f"[Current date and time: {now}]\n\n{request}"
-            if known_ids:
-                prompt += f"\n\nKnown event IDs: {known_ids}"
-            result = await get_calendar_agent().run(prompt, deps=ctx.deps)
-            if result.output.event_id and result.output.title:
-                ctx.deps.calendar_event_ids[result.output.title] = result.output.event_id
-            return result.output.message
-
-        @_orchestrator.tool
         async def delegate_search(
             ctx: RunContext[OrchestratorDeps],
             query: str,

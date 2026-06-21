@@ -41,6 +41,11 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+# Silence the Fetch.ai blockchain gRPC errors — Agentverse HTTP registration
+# works fine without on-chain access; the contract errors are non-actionable noise.
+logging.getLogger("uagents.network").setLevel(logging.CRITICAL)
+logging.getLogger("network").setLevel(logging.CRITICAL)
+
 # ── Message schemas (direct agent-to-agent) ────────────────────────────────────
 
 class SSSRequest(Model):
@@ -69,6 +74,24 @@ class SendTask:
 
 
 _outbound: asyncio.Queue[SendTask] = asyncio.Queue()
+
+# Persistent Redis client for the bridge queue — created once at startup.
+_bridge_redis = None
+
+
+async def _get_bridge_redis():
+    """Return the singleton async Redis client, creating it on first call."""
+    global _bridge_redis
+    if _bridge_redis is None and settings.redis_url:
+        import redis.asyncio as aioredis
+        _bridge_redis = aioredis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=10,
+            socket_timeout=10,
+            retry_on_timeout=True,
+        )
+    return _bridge_redis
 
 
 async def enqueue_send(address: str, text: str, user_id: str = "moneypenny") -> None:
@@ -270,10 +293,8 @@ def _build_agent() -> Agent:
         if not settings.redis_url:
             return
         try:
-            import redis.asyncio as aioredis
             from ai.transport.bridge import pop_outbound_request
-            r = aioredis.from_url(settings.redis_url, decode_responses=True,
-                                  socket_connect_timeout=3, socket_timeout=3)
+            r = await _get_bridge_redis()
             while True:
                 task = await pop_outbound_request(r)
                 if task is None:
@@ -285,9 +306,10 @@ def _build_agent() -> Agent:
                     user_id="moneypenny",
                     correlation_id=task["correlation_id"],
                 ))
-            await r.aclose()
         except Exception as exc:
             logger.warning("[fetch] bridge poll error: %s", exc)
+            global _bridge_redis
+            _bridge_redis = None  # force reconnect on next tick
 
     agent.include(chat_protocol, publish_manifest=True)
     agent.include(desir_protocol, publish_manifest=True)
