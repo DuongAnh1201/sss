@@ -11,6 +11,4 @@ COPY . .
 
 # Set SERVICE=server in Railway env vars for the WebSocket server service.
 # Leave unset (or set to anything else) for the Fetch.ai uAgent service.
-CMD ["sh", "-c", \
-  "if [ \"$SERVICE\" = 'server' ]; then uv run python server.py; \
-   else uv run python -m ai.transport.fetch_wrapper; fi"]
+CMD ["sh", "-c", "if [ \"$SERVICE\" = 'server' ]; then uv run python server.py; else uv run python -m ai.transport.fetch_wrapper; fi"]
