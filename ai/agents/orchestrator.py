@@ -26,14 +26,19 @@ def get_orchestrator() -> Agent:
 
         @_orchestrator.system_prompt
         async def inject_user_context(ctx: RunContext[OrchestratorDeps]) -> str:
-            parts: list[str] = []
+            parts: list[str] = [
+                (
+                    f"Today's date and time: {ctx.deps.current_datetime}. "
+                    "Use this for 'today', 'tomorrow', scheduling, and any "
+                    "time-sensitive question — never guess from your training cutoff."
+                ),
+            ]
             if ctx.deps.name:
                 parts.append(f"User's name: {ctx.deps.name} (address them as {ctx.deps.preferred_pronouns}).")
             if ctx.deps.email_address:
                 parts.append(f"User's email: {ctx.deps.email_address}.")
             if ctx.deps.user_history_context:
                 parts.append(f"## Soul\n{ctx.deps.user_history_context}")
-                parts.append(f"## User Background\n{ctx.deps.user_history_context}")
             turns = (ctx.deps.history_context or {}).get("turns", [])
             if turns:
                 history_lines = "\n".join(
@@ -57,7 +62,11 @@ def get_orchestrator() -> Agent:
             email_type must be 'notification' (styled HTML) or 'user_request' (plain text).
             """
             from ai.agents.agent1 import get_email_agent
-            prompt = f"Send a {email_type} email to {to} with subject '{subject}': {body}"
+            from ai.session.clock import with_datetime_context
+
+            prompt = with_datetime_context(
+                f"Send a {email_type} email to {to} with subject '{subject}': {body}"
+            )
             if link:
                 prompt += f"\nLink: {link}"
             result = await get_email_agent().run(prompt, deps=ctx.deps)
@@ -70,7 +79,9 @@ def get_orchestrator() -> Agent:
         ) -> str:
             """Delegate a web search to the search sub-agent."""
             from ai.agents.agent3 import get_search_agent
-            result = await get_search_agent().run(query, deps=ctx.deps)
+            from ai.session.clock import with_datetime_context
+
+            result = await get_search_agent().run(with_datetime_context(query), deps=ctx.deps)
             return result.output.summary
 
         @_orchestrator.tool
@@ -82,12 +93,16 @@ def get_orchestrator() -> Agent:
         ) -> str:
             """Delegate an iMessage or phone call to the communication sub-agent."""
             from ai.agents.agent4 import get_communication_agent
+            from ai.session.clock import with_datetime_context
+
             prompt = (
                 f"Call {recipient}"
                 if action == "call"
                 else f"Send iMessage to {recipient}: {message}"
             )
-            result = await get_communication_agent().run(prompt, deps=ctx.deps)
+            result = await get_communication_agent().run(
+                with_datetime_context(prompt), deps=ctx.deps
+            )
             return result.output.message
 
         @_orchestrator.tool
@@ -98,7 +113,9 @@ def get_orchestrator() -> Agent:
             delegate_email. Pass the full user request as-is.
             """
             from ai.agents.agent6 import get_gmail_agent
-            result = await get_gmail_agent().run(request, deps=ctx.deps)
+            from ai.session.clock import with_datetime_context
+
+            result = await get_gmail_agent().run(with_datetime_context(request), deps=ctx.deps)
             return result.output.message
 
         @_orchestrator.tool
@@ -108,7 +125,9 @@ def get_orchestrator() -> Agent:
             update, share, delete). Pass the full user request as-is.
             """
             from ai.agents.agent7 import get_drive_agent
-            result = await get_drive_agent().run(request, deps=ctx.deps)
+            from ai.session.clock import with_datetime_context
+
+            result = await get_drive_agent().run(with_datetime_context(request), deps=ctx.deps)
             return result.output.message
 
         @_orchestrator.tool
@@ -121,7 +140,11 @@ def get_orchestrator() -> Agent:
             Pass the full user request as-is.
             """
             from ai.agents.agent5 import get_knowledge_base_agent
-            result = await get_knowledge_base_agent().run(request, deps=ctx.deps)
+            from ai.session.clock import with_datetime_context
+
+            result = await get_knowledge_base_agent().run(
+                with_datetime_context(request), deps=ctx.deps
+            )
             return result.output.message
 
         @_orchestrator.tool
@@ -134,7 +157,11 @@ def get_orchestrator() -> Agent:
             Pass the full user request as-is.
             """
             from ai.agents.agent8 import get_agentverse_agent
-            result = await get_agentverse_agent().run(request, deps=ctx.deps)
+            from ai.session.clock import with_datetime_context
+
+            result = await get_agentverse_agent().run(
+                with_datetime_context(request), deps=ctx.deps
+            )
             return result.output if isinstance(result.output, str) else str(result.output)
 
     return _orchestrator

@@ -22,6 +22,13 @@ class OrchestratorDeps:
     email_address: str = field(default="")
     user_history_context: str = field(default=_SOUL)
     """Assistant soul (``doc/SOUL.md``) — identity, voice, and behavior rules."""
+
+    @property
+    def current_datetime(self) -> str:
+        """Today's date/time for the agent (refreshed on each access)."""
+        from ai.session.clock import current_datetime_context
+
+        return current_datetime_context()
     search_api_key: str = field(default="")
     calendar_event_ids: dict = field(default_factory=dict)
 
